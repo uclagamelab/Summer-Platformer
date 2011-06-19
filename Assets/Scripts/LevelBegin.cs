@@ -10,6 +10,7 @@ public class LevelBegin : MonoBehaviour {
 	public Transform playerStartLocation;
 	
 	private Animation animation;
+	private GameObject playerAndGUI;
 	private GameObject player;
 	private bool playerReady = false;
 	private PhysicsCharacterController physicsController;
@@ -19,7 +20,12 @@ public class LevelBegin : MonoBehaviour {
 		// find the player and move to this location
 		GameObject player = GameObject.Find("Player");
 		if (player == null) {
-			player = (GameObject)Instantiate(defaultPlayer, Vector3.zero, Quaternion.identity);
+			playerAndGUI = (GameObject)Instantiate(defaultPlayer, Vector3.zero, Quaternion.identity);//AngleAxis(270.0f,Vector3.up) );
+			foreach (Transform child in playerAndGUI.transform) {
+				if (child.gameObject.name == "Player") {
+					player = child.gameObject;
+				}
+			}
 		}
 		if (playerStartLocation != null) {
 			player.transform.position = playerStartLocation.position;
@@ -38,7 +44,7 @@ public class LevelBegin : MonoBehaviour {
 		else {
 			playerReady = true;
 		}
-		Debug.Log("Level begin start");
+		//Debug.Log("Level begin start");
 	}
 	
 	void OnLevelWasLoaded() {

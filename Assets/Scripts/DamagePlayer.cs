@@ -29,6 +29,6 @@ public class DamagePlayer : MonoBehaviour {
 				}
 			}
 		}
-		Debug.Log("touch");
+		//Debug.Log("touch");
 	}
 }

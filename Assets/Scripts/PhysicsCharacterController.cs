@@ -49,9 +49,10 @@ public class PhysicsCharacterController : MonoBehaviour {
 	public bool isControllable = true; // shut down controls if necesary
 	private Vector3 addForce = Vector3.zero;
  
-	// Don't let the Physics Engine rotate this physics object so it doesn't fall over when running
 	void Awake ()
 	{
+			// Don't let the Physics Engine rotate this physics object so it doesn't fall over when running
+
 		rigidbody.freezeRotation = true;
 		charOrientation = transform.TransformDirection(Vector3.forward);
 		originalOrientation = transform.TransformDirection(Vector3.forward);
@@ -76,14 +77,18 @@ public class PhysicsCharacterController : MonoBehaviour {
 			animation = null;
 			Debug.Log("No jump animation found and the character has canJump enabled. Turning off animations.");
 		}
-		GameObject cam = GameObject.Find("MainCamera");
-		mainCamera = (Camera) cam.GetComponent("Camera") as Camera;
+		//GameObject cam = GameObject.Find("MainCamera");
+		//mainCamera = (Camera) cam.GetComponent("Camera") as Camera;
 	}
 	
 	void OnLevelWasLoaded() {
 		Debug.Log("Player level load");
-		GameObject cam = GameObject.Find("MainCamera");
-		mainCamera = (Camera) cam.GetComponent("Camera") as Camera;
+		GameObject cam = GameObject.Find("Main Camera");
+		if (cam == null) {
+			Debug.LogError(gameObject.name + ": PhysicsCharacterController: can't find 'Main Camera' in scene. Quitting.");
+			Application.Quit();
+		}
+		mainCamera = (Camera) cam.GetComponent("Camera");
 	}
  
 	// This part detects whether or not the object is grounded and stores it in a variable

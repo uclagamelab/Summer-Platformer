@@ -10,12 +10,17 @@ public class PlayerAttributes : MonoBehaviour {
 	// Use this for initialization
 	void Awake () {
 		Debug.Log("player awake");
-		DontDestroyOnLoad(transform.gameObject);
+		DontDestroyOnLoad(transform.parent.gameObject);
 	}
 	
 	void Start() {
-		healthCounter = (Counter) healthMeter.GetComponent("Counter");
-		healthCounter.counterValue = health;
+		if (healthMeter != null) {
+			healthCounter = (Counter) healthMeter.GetComponent("Counter");
+			healthCounter.counterValue = health;
+		}
+		else {
+			Debug.LogWarning(gameObject.name + ": PlayerAttributes: healthMeter object has not been assigned in the inspector.");
+		}
 	}
 	
 	// Update is called once per frame
