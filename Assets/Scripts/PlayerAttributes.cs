@@ -7,10 +7,30 @@ public class PlayerAttributes : MonoBehaviour {
 	public GameObject healthMeter;
 	private Counter healthCounter;
 	
+	private Camera cam;
+	
 	// Use this for initialization
 	void Awake () {
-		Debug.Log("player awake");
 		DontDestroyOnLoad(transform.parent.gameObject);
+		
+		// start the game with camera disabled
+		foreach (Transform child in transform.parent) {
+			if (child.name == "Main Camera") {
+				GameObject cameraObject = child.gameObject;
+				if (cameraObject != null) {
+					cam = (Camera) cameraObject.GetComponent("Camera");
+					if (cam != null) {
+						cam.enabled = false;
+					}
+					else {
+						Debug.LogWarning(gameObject.name + ": PlayerAttributes: 'Main Camera' does not have a 'Camera' component. That should break everything.");
+					}
+				}
+				else {
+					Debug.LogWarning(gameObject.name + ": PlayerAttributes: could not find a 'Main Camera' object. Please make sure there is one in the scene.");
+				}
+			}
+		}
 	}
 	
 	void Start() {
@@ -21,6 +41,11 @@ public class PlayerAttributes : MonoBehaviour {
 		else {
 			Debug.LogWarning(gameObject.name + ": PlayerAttributes: healthMeter object has not been assigned in the inspector.");
 		}
+	}
+	
+	void OnLevelWasLoaded() {
+		// re-enable the cameraObject
+		cam.enabled = true;
 	}
 	
 	// Update is called once per frame
@@ -35,6 +60,10 @@ public class PlayerAttributes : MonoBehaviour {
 			KillPlayer();
 		}
 		
+	}
+	
+	public void ActivateCamera() {
+		cam.enabled = true;
 	}
 	
 	void KillPlayer() {

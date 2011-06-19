@@ -34,6 +34,13 @@ public class LevelBegin : MonoBehaviour {
 			player.transform.position = transform.position;
 		}
 		
+		// stop any movement
+		player.rigidbody.velocity = Vector3.zero;
+		
+		// make sure the camera is enabled
+		PlayerAttributes pa = (PlayerAttributes) player.GetComponent("PlayerAttributes");
+		pa.ActivateCamera();
+		
 		// make player unmoveable if animation needs playing
 		if (playAnimationOnLevelStart) {
 			physicsController = (PhysicsCharacterController) player.GetComponent("PhysicsCharacterController");
