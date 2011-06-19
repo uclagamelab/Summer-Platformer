@@ -3,7 +3,8 @@ using System.Collections;
 
 public class PlayerAttributes : MonoBehaviour {
 	// some common stuff to
-	public int health = 5;
+	public int health = 5; // starting health
+	public int maxHealth = 5;
 	public GameObject healthMeter;
 	private Counter healthCounter;
 	
@@ -60,6 +61,12 @@ public class PlayerAttributes : MonoBehaviour {
 			KillPlayer();
 		}
 		
+	}
+	
+	public void IncreaseHealth(int amount) {
+		health += amount;
+		if (health > maxHealth) health = maxHealth;
+		healthCounter.UpdateCounter(health);
 	}
 	
 	public void ActivateCamera() {
