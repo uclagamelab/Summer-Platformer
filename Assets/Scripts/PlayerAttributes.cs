@@ -73,6 +73,22 @@ public class PlayerAttributes : MonoBehaviour {
 	void OnLevelWasLoaded() {
 		// re-enable the cameraObject
 		cam.enabled = true;
+		
+		if (healthMeter != null) {
+			healthCounter = (Counter) healthMeter.GetComponent("Counter");
+			healthCounter.UpdateCounter(health);
+		}
+		else {
+			Debug.LogWarning(gameObject.name + ": PlayerAttributes: healthMeter object has not been assigned in the inspector.");
+		}
+		
+		if (livesMeter != null) {
+			livesCounter = (Counter) livesMeter.GetComponent("Counter");
+			livesCounter.UpdateCounter(playerLives-1);
+		}
+		else {
+			Debug.LogWarning(gameObject.name + ": PlayerAttributes: livesMeter object has not been assigned in the inspector.");
+		}
 	}
 	
 	// Update is called once per frame
