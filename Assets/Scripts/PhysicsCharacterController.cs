@@ -14,6 +14,7 @@ public class PhysicsCharacterController : MonoBehaviour {
 	public AnimationClip runAnimation;
 	public AnimationClip jumpPoseAnimation;
 	public AnimationClip deathAnimation;
+	public AnimationClip hurtAnimation;
 	
 	public float walkAnimationSpeed = 1.0f;
 	public float walkMaxAnimationSpeed  = 0.75f;
@@ -29,13 +30,17 @@ public class PhysicsCharacterController : MonoBehaviour {
 	public bool allowRunning = false;
 	public float jumpSpeed = 6.0f;
  
+	public float hurtCooldown = 1.5f;
+	private float hurtTime = 0.0f;
+ 
 	// These variables are there for use by the script and don't need to be edited
 	public enum CharacterState {
 		Idle = 0,
 		Walking = 1,
 		Running = 2,
 		Jumping = 3,
-		Dead = 4
+		Dead = 4,
+		Hurt = 5
 	}
 	public CharacterState characterState = 0;
 	public bool canJump = false;
@@ -82,6 +87,10 @@ public class PhysicsCharacterController : MonoBehaviour {
 			animation = null;
 			Debug.Log("No death animation found and the character has canJump enabled. Turning off animations.");
 		}
+		if(!hurtAnimation) {
+			Debug.Log(gameObject.name + ": PhysicsCharacterController: no hurtAnimation found, assign one in the inspector.");
+		}
+		
 		//GameObject cam = GameObject.Find("MainCamera");
 		//mainCamera = (Camera) cam.GetComponent("Camera") as Camera;
 	}
@@ -143,85 +152,20 @@ public class PhysicsCharacterController : MonoBehaviour {
 		}
 	}*/
 	void UpdateSmoothedMovementDirection() {
-	{
 		Transform cameraTransform = mainCamera.transform;
 
 		//float v = Input.GetAxisRaw("Vertical");
 		float h = Input.GetAxisRaw("Horizontal");
-
-		// Are we moving backwards or looking backwards
-		/*if (v < -0.2)
-			movingBack = true;
-		else
-			movingBack = false;*/
 	
 		bool wasMoving = isMoving;
 		isMoving = rigidbody.velocity.magnitude > 0.1 ;
 		
 		// Target direction relative to the camera
-		//var targetDirection = h * right + v * forward;
-		//Vector3 targetDirection = h*cameraRight;//*charOrientation; //right;
 		if (h != 0.0) charOrientation = h > 0.0 ? cameraTransform.TransformDirection(-1.0f*originalOrientation) : cameraTransform.TransformDirection(originalOrientation);
 	
 		// Grounded controls
-		if (grounded)
+		if (grounded && characterState != CharacterState.Hurt)
 		{
-			// Lock camera for short period when transitioning moving & standing still
-			//lockCameraTimer += Time.deltaTime;
-			//if (isMoving != wasMoving) lockCameraTimer = 0.0;
-			/*
-			// We store speed and direction seperately,
-			// so that when the character stands still we still have a valid forward direction
-			// moveDirection is always normalized, and we only update it if there is user input.
-			if (targetDirection != Vector3.zero)
-			{
-				// If we are really slow, just snap to the target direction
-				if (moveSpeed < walkSpeed * 0.9 && grounded)
-				{
-					moveDirection = targetDirection.normalized;
-				}
-				// Otherwise smoothly turn towards it
-				else
-				{
-					//moveDirection = Vector3.RotateTowards(moveDirection, targetDirection, rotateSpeed * Mathf.Deg2Rad * Time.deltaTime, 1000);
-					moveDirection = targetDirection;//, rotateSpeed * Mathf.Deg2Rad * Time.deltaTime, 1000);
-
-					moveDirection = moveDirection.normalized;
-				}
-			}*/
-		
-			// Smooth the speed based on the current target direction
-			//float curSmooth = speedSmoothing * Time.deltaTime;
-		
-			// Choose target speed
-			//* We want to support analog input but make sure you cant walk faster diagonally than just forward or sideways
-			/*float targetSpeed = Mathf.Min(targetDirection.magnitude, 1.0);
-	
-			characterState = CharacterState.Idle;
-		
-			// Pick speed modifier
-			if (Input.GetKey (KeyCode.LeftShift) | Input.GetKey (KeyCode.RightShift))
-			{
-				targetSpeed *= runSpeed;
-				characterState = CharacterState.Running;
-			}
-			else if (Time.time - trotAfterSeconds > walkTimeStart)
-			{
-				targetSpeed *= trotSpeed;
-				characterState = CharacterState.Trotting;
-			}
-			else
-			{
-				targetSpeed *= walkSpeed;
-				characterState = CharacterState.Walking;
-			}
-		
-			moveSpeed = Mathf.Lerp(moveSpeed, targetSpeed, curSmooth);
-		
-			// Reset walk time start when we slow down
-			if (moveSpeed < walkSpeed * 0.3)
-				walkTimeStart = Time.time;*/
-			
 			//	determine character state
 			characterState = CharacterState.Walking;
 			if (rigidbody.velocity.magnitude > maxWalkSpeed && allowRunning) { 
@@ -230,21 +174,18 @@ public class PhysicsCharacterController : MonoBehaviour {
 			else if (rigidbody.velocity.sqrMagnitude < 0.01f) {
 				characterState = CharacterState.Idle;
 			}
-				
+		
+		}		
+		else if (characterState == CharacterState.Hurt) {
+			if (Time.time - hurtTime > hurtCooldown) {
+				characterState = CharacterState.Idle;
+			}				
 		}
-		// In air controls
-		/*else
-		{
-			// Lock camera while in air
-			if (jumping)
-				lockCameraTimer = 0.0;
-
-			if (isMoving) {
-				inAirVelocity += targetDirection.normalized * Time.deltaTime * inAirControlAcceleration;
-			}
-		}*/
-	}		
-
+	}
+	
+	public void HurtPlayer() {
+		hurtTime = Time.time;
+		characterState = CharacterState.Hurt;
 	}
 
 	// This is called every physics frame
@@ -256,11 +197,6 @@ public class PhysicsCharacterController : MonoBehaviour {
 			Input.ResetInputAxes();
 			return;
 		}
-		
-		/*if (Input.GetButtonDown ("Jump"))
-		{
-			lastJumpButtonTime = Time.time;
-		}*/
 
 		UpdateSmoothedMovementDirection();
 		Vector3 lookTarget = new Vector3(charOrientation.x+transform.position.x, transform.position.y, transform.position.z + charOrientation.z);
@@ -279,8 +215,6 @@ public class PhysicsCharacterController : MonoBehaviour {
 		}
 		else if(Mathf.Abs(horizontal) > 0.0f && rigidbody.velocity.magnitude < maxWalkSpeed && grounded == true)
 		{
-			//rigidbody.AddForce (transform.rotation * Vector3.forward * vertical);
-			//rigidbody.AddForce (transform.rotation * Vector3.right * -horizontal);
 			addForce = transform.rotation * Vector3.forward * Mathf.Abs(horizontal) ;
 			addForce.y = 0.1f;
 			rigidbody.AddForce(addForce*walkForce);
@@ -339,6 +273,9 @@ public class PhysicsCharacterController : MonoBehaviour {
 						animation.CrossFade(deathAnimation.name);
 					}
 				}
+			}
+			if (characterState == CharacterState.Hurt) {
+				animation.CrossFade(hurtAnimation.name);
 			}
 		}
 	// ANIMATION sector

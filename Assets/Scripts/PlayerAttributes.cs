@@ -67,6 +67,7 @@ public class PlayerAttributes : MonoBehaviour {
 		else {
 			Debug.LogWarning(gameObject.name + ": PlayerAttributes: livesMeter object has not been assigned in the inspector.");
 		}
+		pcc = (PhysicsCharacterController) GetComponent("PhysicsCharacterController");
 
 	}
 	
@@ -124,6 +125,7 @@ public class PlayerAttributes : MonoBehaviour {
 	}
 	
 	public void DecreaseHealth(int amount) {
+		pcc.HurtPlayer();
 		health -= amount;
 		healthCounter.UpdateCounter(health);
 		if (health < 1) {
@@ -146,7 +148,6 @@ public class PlayerAttributes : MonoBehaviour {
 		playerIsDead = true;
 		
 		// make sure player can't move
-		pcc = (PhysicsCharacterController) GetComponent("PhysicsCharacterController");
 		pcc.isControllable = false;
 		pcc.characterState = PhysicsCharacterController.CharacterState.Dead;
 		pcc.PlayDeathAnimation();
