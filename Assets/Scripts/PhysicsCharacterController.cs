@@ -13,6 +13,7 @@ public class PhysicsCharacterController : MonoBehaviour {
 	public AnimationClip walkAnimation;
 	public AnimationClip runAnimation;
 	public AnimationClip jumpPoseAnimation;
+	public AnimationClip deathAnimation;
 	
 	public float walkAnimationSpeed = 1.0f;
 	public float walkMaxAnimationSpeed  = 0.75f;
@@ -32,9 +33,9 @@ public class PhysicsCharacterController : MonoBehaviour {
 	public enum CharacterState {
 		Idle = 0,
 		Walking = 1,
-		//Trotting = 2,
 		Running = 2,
 		Jumping = 3,
+		Dead = 4
 	}
 	public CharacterState characterState = 0;
 	public bool canJump = false;
@@ -76,6 +77,10 @@ public class PhysicsCharacterController : MonoBehaviour {
 		if(!jumpPoseAnimation && canJump) {
 			animation = null;
 			Debug.Log("No jump animation found and the character has canJump enabled. Turning off animations.");
+		}
+		if(!deathAnimation) {
+			animation = null;
+			Debug.Log("No death animation found and the character has canJump enabled. Turning off animations.");
 		}
 		//GameObject cam = GameObject.Find("MainCamera");
 		//mainCamera = (Camera) cam.GetComponent("Camera") as Camera;
@@ -268,7 +273,7 @@ public class PhysicsCharacterController : MonoBehaviour {
 		}
 		else if(jump && grounded  && jumpLimit >= 10)
 		{
-			rigidbody.velocity = rigidbody.velocity + (Vector3.up * jumpSpeed);
+			rigidbody.velocity = rigidbody.velocity + (Vector3.up * jumpSpeed) + (transform.rotation *Vector3.forward *Mathf.Abs(horizontal));
 			jumpLimit = 0;
 			characterState = CharacterState.Jumping;
 		}
@@ -330,10 +335,24 @@ public class PhysicsCharacterController : MonoBehaviour {
 						animation[walkAnimation.name].speed = Mathf.Clamp(rigidbody.velocity.magnitude*walkAnimationSpeed, 0.0f, walkMaxAnimationSpeed);
 						animation.CrossFade(walkAnimation.name);	
 					}
-				
+					else if(characterState == CharacterState.Dead) {
+						animation.CrossFade(deathAnimation.name);
+					}
 				}
 			}
 		}
 	// ANIMATION sector
+	}
+	
+	public void PlayDeathAnimation() {
+		animation.Play(deathAnimation.name);
+		Debug.Log("Play death animation");
+	}
+	
+	public bool DeathAnimationFinished() {
+		if (animation.IsPlaying(deathAnimation.name)) {
+			return false;
+		}
+		return true;
 	}
 }

@@ -7,7 +7,7 @@ public class LevelBegin : MonoBehaviour {
 	public GameObject firstSpawnPoint;
 	public bool playAnimationOnLevelStart = false;
 	public AnimationClip clipForStart;
-	public Transform playerStartLocation;
+	public GameObject playerStartLocation;
 	
 	private Animation animation;
 	private GameObject playerAndGUI;
@@ -28,7 +28,7 @@ public class LevelBegin : MonoBehaviour {
 			}
 		}
 		if (playerStartLocation != null) {
-			player.transform.position = playerStartLocation.position;
+			player.transform.position = playerStartLocation.transform.position;
 		}
 		else {
 			player.transform.position = transform.position;
@@ -40,6 +40,15 @@ public class LevelBegin : MonoBehaviour {
 		// make sure the camera is enabled
 		PlayerAttributes pa = (PlayerAttributes) player.GetComponent("PlayerAttributes");
 		pa.ActivateCamera();
+		if (firstSpawnPoint != null) {
+			pa.SetRespawn(firstSpawnPoint.transform.position);
+		}
+		else if (playerStartLocation != null) {
+			pa.SetRespawn(playerStartLocation.transform.position);
+		}
+		else {
+			pa.SetRespawn(gameObject.transform.position);
+		}
 		
 		// make player unmoveable if animation needs playing
 		if (playAnimationOnLevelStart) {
@@ -52,10 +61,12 @@ public class LevelBegin : MonoBehaviour {
 			playerReady = true;
 		}
 		//Debug.Log("Level begin start");
+		
+		
 	}
 	
 	void OnLevelWasLoaded() {
-		Debug.Log("Level begin level loaded");
+		//Debug.Log("Level begin level loaded");
 	}
 	
 	void Update() {

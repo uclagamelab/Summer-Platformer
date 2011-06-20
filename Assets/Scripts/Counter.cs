@@ -20,7 +20,6 @@ public class Counter : MonoBehaviour {
 	
 	public void UpdateCounter(int val) {
 		counterValue = val;
-		print(val);
 		for (int i = 0; i < maxValue; ++i) {
 			GameObject imagePlane = imagePlanes[i];
 			if (i < counterValue) {

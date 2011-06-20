@@ -4,11 +4,26 @@ using System.Collections;
 public class PlayerAttributes : MonoBehaviour {
 	// some common stuff to
 	public int health = 5; // starting health
+	public int defaultHealth = 5;
 	public int maxHealth = 5;
+	
+	public int playerLives = 3;
+	public int maxPlayerLives = 5;
+	public string deathLevelName = "";
+	private bool playerIsDead = false;
+	
+	private Vector3 lastRespawn;
+	
 	public GameObject healthMeter;
 	private Counter healthCounter;
 	
+	public GameObject livesMeter;
+	private Counter livesCounter;
+	
 	private Camera cam;
+	
+	private GameObject player; 
+	private PhysicsCharacterController pcc;
 	
 	// Use this for initialization
 	void Awake () {
@@ -32,16 +47,27 @@ public class PlayerAttributes : MonoBehaviour {
 				}
 			}
 		}
+		
+		player = GameObject.Find("Player");
 	}
 	
 	void Start() {
 		if (healthMeter != null) {
 			healthCounter = (Counter) healthMeter.GetComponent("Counter");
-			healthCounter.counterValue = health;
+			healthCounter.UpdateCounter(health);
 		}
 		else {
 			Debug.LogWarning(gameObject.name + ": PlayerAttributes: healthMeter object has not been assigned in the inspector.");
 		}
+		
+		if (livesMeter != null) {
+			livesCounter = (Counter) livesMeter.GetComponent("Counter");
+			livesCounter.UpdateCounter(playerLives-1);
+		}
+		else {
+			Debug.LogWarning(gameObject.name + ": PlayerAttributes: livesMeter object has not been assigned in the inspector.");
+		}
+
 	}
 	
 	void OnLevelWasLoaded() {
@@ -51,13 +77,40 @@ public class PlayerAttributes : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		
+		if (playerIsDead) {
+			// check if player death animation is finished
+			if (pcc.DeathAnimationFinished()) {
+				playerLives -= 1;
+				livesCounter.UpdateCounter(playerLives-1);
+				if (playerLives < 1) {
+					LoseGame();
+				}
+				// else we respawn the player
+				RespawnPlayer();
+				playerIsDead = false;
+			}
+		}
+	}
+	
+	void RespawnPlayer() {
+		gameObject.transform.position = lastRespawn;
+		// stop any movement
+		player.rigidbody.velocity = Vector3.zero;
+		//rigidbody.inertiaTensor = Vector3.zero;
+		pcc.isControllable = true;
+		health = defaultHealth;
+		healthCounter.UpdateCounter(health);
+	}
+	
+	public void SetRespawn(Vector3 newRespawn) {
+		Debug.Log("set respawn to " + newRespawn);
+		lastRespawn = newRespawn;
 	}
 	
 	public void DecreaseHealth(int amount) {
 		health -= amount;
 		healthCounter.UpdateCounter(health);
-		if (health < 0) {
+		if (health < 1) {
 			KillPlayer();
 		}
 		
@@ -73,7 +126,21 @@ public class PlayerAttributes : MonoBehaviour {
 		cam.enabled = true;
 	}
 	
-	void KillPlayer() {
-		// do a death animation
+	public void KillPlayer() {
+		playerIsDead = true;
+		
+		// make sure player can't move
+		pcc = (PhysicsCharacterController) GetComponent("PhysicsCharacterController");
+		pcc.isControllable = false;
+		pcc.characterState = PhysicsCharacterController.CharacterState.Dead;
+		pcc.PlayDeathAnimation();
+		
+	}
+	
+	public void LoseGame() {
+		Debug.Log(gameObject.name + ": PlayerAttributes: lose the game and send to level " + deathLevelName);
+		cam.enabled = false;
+		Destroy(player);
+		Application.LoadLevel(deathLevelName);
 	}
 }

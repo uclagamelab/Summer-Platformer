@@ -13,7 +13,7 @@ public class LevelLoader : MonoBehaviour {
 	public void Start() {
 		// kill the player on this screen
 		if (killPlayerOnThisScreen == true) {
-			GameObject player = GameObject.Find("PlayerAndGUI");
+			GameObject player = GameObject.Find("PlayerAndGUI(Clone)");
 			if (player != null) {
 				Destroy(player);
 			}
@@ -21,6 +21,19 @@ public class LevelLoader : MonoBehaviour {
 				Debug.LogWarning(gameObject.name + ": LevelLoader: told to destroy player, but no player found.");
 			}
 		}
+	}
+	
+	public void OnLevelWasLoaded()  {
+		// kill the player on this screen
+		//~ if (killPlayerOnThisScreen == true) {
+			//~ GameObject player = GameObject.Find("PlayerAndGUI(Clone)");
+			//~ if (player != null) {
+				//~ Destroy(player);
+			//~ }
+			//~ else {
+				//~ Debug.LogWarning(gameObject.name + ": LevelLoader: told to destroy player, but no player found.");
+			//~ }
+		//~ }
 	}
 	
 	public void StartLevel() {
