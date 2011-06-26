@@ -107,6 +107,9 @@ public class PlayerAttributes : MonoBehaviour {
 				playerIsDead = false;
 			}
 		}
+		
+		healthCounter.UpdateCounter(health);
+		livesCounter.UpdateCounter(playerLives-1);
 	}
 	
 	void RespawnPlayer() {
@@ -138,6 +141,12 @@ public class PlayerAttributes : MonoBehaviour {
 		health += amount;
 		if (health > maxHealth) health = maxHealth;
 		healthCounter.UpdateCounter(health);
+	}
+	
+	public void IncreaseLife(int amount) {
+		playerLives += amount;
+		if (playerLives > maxPlayerLives) playerLives = maxPlayerLives;
+		livesCounter.UpdateCounter(playerLives);
 	}
 	
 	public void ActivateCamera() {

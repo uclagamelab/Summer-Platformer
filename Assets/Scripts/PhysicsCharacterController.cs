@@ -8,6 +8,8 @@ public class PhysicsCharacterController : MonoBehaviour {
 	public Camera mainCamera;
 	
 	private Animation animation;
+	private int score;
+	public GameObject scoreUpdate;
 	
 	public AnimationClip idleAnimation;
 	public AnimationClip walkAnimation;
@@ -15,12 +17,23 @@ public class PhysicsCharacterController : MonoBehaviour {
 	public AnimationClip jumpPoseAnimation;
 	public AnimationClip deathAnimation;
 	public AnimationClip hurtAnimation;
+	public AnimationClip projectileAnimation;
+	public AnimationClip meleeAnimation;
 	
 	public float walkAnimationSpeed = 1.0f;
 	public float walkMaxAnimationSpeed  = 0.75f;
 	public float runMaxAnimationSpeed = 1.0f;
 	public float jumpAnimationSpeed = 1.15f;
 	public float landAnimationSpeed  = 1.0f;
+	public float projectileAnimationSpeed = 1.0f;
+	public float meleeAnimationSpeed = 1.0f;
+	
+	public GameObject projectilePrefab;
+	public GameObject projectileCreationPoint;
+	
+	public bool canMeleeAttack = false;
+	public bool useJetPackControl = false;
+	public float jetPackForce = 0.0f;
 
 	// These variables are for adjusting in the inspector how the object behaves
 	public float maxWalkSpeed = 6.0f;
@@ -32,7 +45,11 @@ public class PhysicsCharacterController : MonoBehaviour {
  
 	public float hurtCooldown = 1.5f;
 	private float hurtTime = 0.0f;
- 
+	public float shootCooldown = 1.0f;
+	private float shootTime = 0.0f;
+	public float jumpCooldown = 1.0f;
+	private float jumpTime = 0.0f;
+	 
 	// These variables are there for use by the script and don't need to be edited
 	public enum CharacterState {
 		Idle = 0,
@@ -40,7 +57,9 @@ public class PhysicsCharacterController : MonoBehaviour {
 		Running = 2,
 		Jumping = 3,
 		Dead = 4,
-		Hurt = 5
+		Hurt = 5,
+		Shooting = 6,
+		Melee = 7
 	}
 	public CharacterState characterState = 0;
 	public bool canJump = false;
@@ -89,10 +108,16 @@ public class PhysicsCharacterController : MonoBehaviour {
 		}
 		if(!hurtAnimation) {
 			Debug.Log(gameObject.name + ": PhysicsCharacterController: no hurtAnimation found, assign one in the inspector.");
+			animation = null;
 		}
-		
-		//GameObject cam = GameObject.Find("MainCamera");
-		//mainCamera = (Camera) cam.GetComponent("Camera") as Camera;
+		if (!projectileAnimation) {
+			Debug.Log(gameObject.name + ": PhysicsCharacterController: no projectile animation found. Turning off animations");
+			animation = null;
+		}
+		if (canMeleeAttack && !meleeAnimation) {
+			Debug.Log(gameObject.name + ": PhysicsCharacterController: no melee animation found and canMeleeAttack is check. Turning off animations.");
+			animation = null;
+		}
 	}
 	
 	void OnLevelWasLoaded() {
@@ -124,7 +149,8 @@ public class PhysicsCharacterController : MonoBehaviour {
 			characterState = CharacterState.Jumping;
 		}
 	}
-
+	
+	// we'll map unity "jump" to projectile
 	public virtual bool jump
 	{
 		get
@@ -142,29 +168,29 @@ public class PhysicsCharacterController : MonoBehaviour {
 		}
 	}
 	
-	// ignore vertical for now
-	/*public virtual float vertical
+	public virtual float vertical
 	{
 		get
 		{
 		
-			return Input.GetAxis("Vertical") * force;
+			return Input.GetAxis("Vertical") ;
 		}
-	}*/
+	}
+	
 	void UpdateSmoothedMovementDirection() {
 		Transform cameraTransform = mainCamera.transform;
 
 		//float v = Input.GetAxisRaw("Vertical");
 		float h = Input.GetAxisRaw("Horizontal");
 	
-		bool wasMoving = isMoving;
-		isMoving = rigidbody.velocity.magnitude > 0.1 ;
+		//bool wasMoving = isMoving;
+		//isMoving = rigidbody.velocity.magnitude > 0.1 ;
 		
 		// Target direction relative to the camera
 		if (h != 0.0) charOrientation = h > 0.0 ? cameraTransform.TransformDirection(-1.0f*originalOrientation) : cameraTransform.TransformDirection(originalOrientation);
 	
 		// Grounded controls
-		if (grounded && characterState != CharacterState.Hurt)
+		if (grounded && characterState != CharacterState.Hurt && characterState != CharacterState.Shooting)
 		{
 			//	determine character state
 			characterState = CharacterState.Walking;
@@ -180,6 +206,23 @@ public class PhysicsCharacterController : MonoBehaviour {
 			if (Time.time - hurtTime > hurtCooldown) {
 				characterState = CharacterState.Idle;
 			}				
+		}
+		if (jump && (Time.time - shootTime > shootCooldown) ) { // remapped jump to projectile
+			//Debug.Log("shoot");
+			// do projectile animation and prefab 
+			characterState = CharacterState.Shooting;
+			animation.CrossFade(projectileAnimation.name);
+			shootTime = Time.time;
+			// instantiate the projectile
+			if (projectilePrefab != null) {
+				Instantiate(projectilePrefab, projectileCreationPoint.transform.position, Quaternion.AngleAxis(90-transform.eulerAngles.y, Vector3.up));//gameObject.transform.rotation);
+			}
+			else Debug.LogWarning(gameObject.name + ":PhysicsCharacterController: tried to shoot but no prefab present");
+		}
+		
+		if (canMeleeAttack && Input.GetAxis("Fire1") >0.0f ) {
+			characterState = CharacterState.Melee;
+			Debug.Log("do melee");
 		}
 	}
 	
@@ -203,15 +246,22 @@ public class PhysicsCharacterController : MonoBehaviour {
 		transform.LookAt(lookTarget);
  
 		// If the object is grounded and isn't moving at the max speed or higher apply force to move it
-		if (characterState == CharacterState.Running && rigidbody.velocity.magnitude < maxRunSpeed && grounded == true) {
+		if (useJetPackControl && vertical < 0.0f && rigidbody.velocity.magnitude < maxRunSpeed) {
+			addForce = Vector3.up * Mathf.Abs(vertical);
+			rigidbody.AddForce(addForce*jetPackForce);
+		}
+			
+		else if(characterState == CharacterState.Running && rigidbody.velocity.magnitude < maxRunSpeed && grounded == true) {
 			addForce = transform.rotation * Vector3.forward * Mathf.Abs(horizontal) ;
 			rigidbody.AddForce(addForce*runForce);
 		}
-		else if(jump && grounded  && jumpLimit >= 10)
+		//else if(jump && grounded  && jumpLimit >= 10)
+		else if(vertical > 0.0f && grounded  && jumpLimit >= 20 && Time.time - jumpTime > jumpCooldown)
 		{
 			rigidbody.velocity = rigidbody.velocity + (Vector3.up * jumpSpeed) + (transform.rotation *Vector3.forward *Mathf.Abs(horizontal));
 			jumpLimit = 0;
 			characterState = CharacterState.Jumping;
+			jumpTime = Time.time;
 		}
 		else if(Mathf.Abs(horizontal) > 0.0f && rigidbody.velocity.magnitude < maxWalkSpeed && grounded == true)
 		{
@@ -222,16 +272,7 @@ public class PhysicsCharacterController : MonoBehaviour {
  
 		// This part is for jumping. I only let jump force be applied every 10 physics frames so
 		// the player can't somehow get a huge velocity due to multiple jumps in a very short time
-		if(jumpLimit < 10) jumpLimit ++;
- 
-		//~ if(jump && grounded  && jumpLimit >= 10)
-		//~ {
-			//~ rigidbody.velocity = rigidbody.velocity + (Vector3.up * jumpSpeed);
-			//~ jumpLimit = 0;
-			//~ characterState = CharacterState.Jumping;
-		//~ }
-		
-		
+		if(jumpLimit < 20) jumpLimit ++;
 		
 		// ANIMATION sector
 		if(animation) {
@@ -277,13 +318,26 @@ public class PhysicsCharacterController : MonoBehaviour {
 			if (characterState == CharacterState.Hurt) {
 				animation.CrossFade(hurtAnimation.name);
 			}
+			else if (characterState == CharacterState.Shooting) {
+				if (!animation.IsPlaying(projectileAnimation.name)) {
+					characterState = CharacterState.Idle;
+				}
+			}
+			else if (canMeleeAttack && characterState == CharacterState.Melee) {
+				animation.CrossFade(meleeAnimation.name);
+			}
 		}
 	// ANIMATION sector
 	}
 	
+	public void UpdateScore(int addToScore) {
+		score += addToScore;
+		scoreUpdate.BroadcastMessage("UpdateScore", score);
+	}
+	
 	public void PlayDeathAnimation() {
 		animation.Play(deathAnimation.name);
-		Debug.Log("Play death animation");
+		//Debug.Log("Play death animation");
 	}
 	
 	public bool DeathAnimationFinished() {

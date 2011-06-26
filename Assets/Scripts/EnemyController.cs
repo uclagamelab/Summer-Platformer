@@ -24,6 +24,14 @@ public class EnemyController : MonoBehaviour {
 	private float hurtTime = 0.0f;
 	
 	public int health = 2;
+	public int scoreValue = 1;
+	
+	public bool enemyCanShoot = false;
+	public AnimationClip enemyShootAnimation;
+	public GameObject projectilePrefab;
+	public GameObject shootSpawnPoint;
+	public float shootCooldown = 2.0f;
+	private float shootTime = 0.0f;
  
 	// These variables are there for use by the script and don't need to be edited
 	public enum EnemyState {
@@ -37,14 +45,17 @@ public class EnemyController : MonoBehaviour {
 	private bool isMoving = false;
 	private Vector3 originalOrientation = Vector3.zero;
 	private Vector3 charOrientation = Vector3.zero;
-	[HideInInspector]
+	//[HideInInspector]
 	public bool isControllable = true; // shut down controls if necesary
 	private Vector3 addForce = Vector3.zero;
  
 	private GameObject mainCamera;
 	private Vector3 attackDirection;
 	
-	public bool printPos = true;
+	private bool printPos = true;
+	private GameObject thePlayer;
+	
+	private ScoreUpdate scoreUpdate;
 	
 	void Awake ()
 	{
@@ -75,7 +86,7 @@ public class EnemyController : MonoBehaviour {
 	}
 	
 	void Start() {
-		
+		thePlayer= GameObject.Find("Player");
 	}
 	
 	void OnLevelWasLoaded() {
@@ -88,6 +99,17 @@ public class EnemyController : MonoBehaviour {
 			//Debug.Log("player detected");
 			attackDirection = transform.position - other.gameObject.transform.position;
 			//if (printPos) Debug.Log(attackDirection);
+			if (enemyCanShoot && Time.time - shootTime > shootCooldown) {
+				if (projectilePrefab != null) {
+					//Quaternion q = Quaternion.AngleAxis(90-transform.eulerAngles.y, Vector3.up);
+					Quaternion q = Quaternion.identity;
+					q.SetLookRotation(attackDirection ) ;
+					
+					GameObject g = (GameObject) Instantiate(projectilePrefab, shootSpawnPoint.transform.position, q);
+					g.transform.Rotate(Vector3.up*90);
+				}				
+				shootTime = Time.time;
+			}
 		}
 	}
 	
@@ -148,11 +170,18 @@ public class EnemyController : MonoBehaviour {
 		}
 	}
 	
-	
+	public void DamageEnemy(int damage ) {
+		Debug.Log(gameObject.name + " EnemyController: DamageEnemy " + damage);
+		health -= damage;
+		HurtEnemy();
+	}
 	
 	public void HurtEnemy() {
 		hurtTime = Time.time;
 		enemyState = EnemyState.Hurt;
+		if (health < 1) {
+			KillEnemy();
+		}
 	}
 
 	// This is called every physics frame
@@ -199,8 +228,13 @@ public class EnemyController : MonoBehaviour {
 	}
 	
 	public void KillEnemy() {
-		isControllable = false;
-		PlayDeathAnimation();
+		if (isControllable) {
+			enemyState = EnemyState.Dead;
+			isControllable = false;
+			PlayDeathAnimation();
+			thePlayer = GameObject.Find("Player");
+			thePlayer.BroadcastMessage("UpdateScore", scoreValue);
+		}
 	}
 	
 	public void PlayDeathAnimation() {
