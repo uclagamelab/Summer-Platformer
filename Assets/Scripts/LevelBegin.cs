@@ -9,7 +9,7 @@ public class LevelBegin : MonoBehaviour {
 	public AnimationClip clipForStart;
 	public GameObject playerStartLocation;
 	
-	private Animation animation;
+	private Animation anim;
 	private GameObject playerAndGUI;
 	private GameObject player;
 	private bool playerReady = false;
@@ -54,8 +54,8 @@ public class LevelBegin : MonoBehaviour {
 		if (playAnimationOnLevelStart) {
 			physicsController = (PhysicsCharacterController) player.GetComponent("PhysicsCharacterController");
 			physicsController.isControllable = false;
-			animation = (Animation) GetComponent("Animation");
-			animation.playAutomatically = true;
+			anim = (Animation) GetComponent("Animation");
+			anim.playAutomatically = true;
 		}
 		else {
 			playerReady = true;
@@ -71,7 +71,7 @@ public class LevelBegin : MonoBehaviour {
 	
 	void Update() {
 		if (!playerReady) {
-			if (!animation.IsPlaying(clipForStart.name) ) {
+			if (!anim.IsPlaying(clipForStart.name) ) {
 				playerReady = true;
 				physicsController.isControllable = true;
 			}

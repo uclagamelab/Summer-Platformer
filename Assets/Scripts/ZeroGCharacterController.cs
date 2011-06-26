@@ -7,7 +7,7 @@ public class ZeroGCharacterController : MonoBehaviour {
 	
 	public Camera mainCamera;
 	
-	private Animation animation;
+	private Animation anim;
 	
 	public AnimationClip idleAnimation;
 	public AnimationClip flyAnimation;
@@ -57,18 +57,18 @@ public class ZeroGCharacterController : MonoBehaviour {
 		
 		// TODO: set up main camera again when level loads
 		
-		animation = (Animation) GetComponent("Animation");
-		if(!animation) Debug.Log("The character you would like to control doesn't have animations. Moving her might look weird.");
+		anim = (Animation) GetComponent("Animation");
+		if(!anim) Debug.Log("The character you would like to control doesn't have animations. Moving her might look weird.");
 		if(!idleAnimation) {
-			animation = null;
+			anim = null;
 			Debug.Log("No idle animation found. Turning off animations.");
 		}
 		if(!flyAnimation) {
-			animation = null;
+			anim = null;
 			Debug.Log("No walk animation found. Turning off animations.");
 		}
 		if(!deathAnimation) {
-			animation = null;
+			anim = null;
 			Debug.Log("No death animation found and the character has canJump enabled. Turning off animations.");
 		}
 		if(!hurtAnimation) {
@@ -76,7 +76,7 @@ public class ZeroGCharacterController : MonoBehaviour {
 		}
 		if (!projectileAnimation) {
 			Debug.Log(gameObject.name + ": PhysicsCharacterController: no projectile animation found. Turning off animations");
-			animation = null;
+			anim = null;
 		}
 	}
 	
@@ -159,7 +159,7 @@ public class ZeroGCharacterController : MonoBehaviour {
 			//Debug.Log("shoot");
 			// do projectile animation and prefab 
 			characterState = CharacterState.Shooting;
-			animation.CrossFade(projectileAnimation.name);
+			anim.CrossFade(projectileAnimation.name);
 			shootTime = Time.time;
 			// instantiate the projectile
 			if (projectilePrefab != null) {
@@ -201,26 +201,26 @@ public class ZeroGCharacterController : MonoBehaviour {
 		}
 		
 		// ANIMATION sector
-		if(animation) {
+		if(anim) {
 				//if(rigidbody.velocity.sqrMagnitude < 0.01) {
 				if (characterState == CharacterState.Idle) {
-					animation.CrossFade(idleAnimation.name);
+					anim.CrossFade(idleAnimation.name);
 				}
 				else 
 				{
 					 if(characterState == CharacterState.Flying) {
-						animation[flyAnimation.name].speed = Mathf.Clamp(rigidbody.velocity.magnitude*flyAnimationSpeed, 0.0f, flyMaxAnimationSpeed);
-						animation.CrossFade(flyAnimation.name);	
+						anim[flyAnimation.name].speed = Mathf.Clamp(rigidbody.velocity.magnitude*flyAnimationSpeed, 0.0f, flyMaxAnimationSpeed);
+						anim.CrossFade(flyAnimation.name);	
 					}
 					else if(characterState == CharacterState.Dead) {
-						animation.CrossFade(deathAnimation.name);
+						anim.CrossFade(deathAnimation.name);
 					}
 				}
 			if (characterState == CharacterState.Hurt) {
-				animation.CrossFade(hurtAnimation.name);
+				anim.CrossFade(hurtAnimation.name);
 			}
 			else if (characterState == CharacterState.Shooting) {
-				if (!animation.IsPlaying(projectileAnimation.name)) {
+				if (!anim.IsPlaying(projectileAnimation.name)) {
 					characterState = CharacterState.Idle;
 				}
 			}
@@ -229,12 +229,12 @@ public class ZeroGCharacterController : MonoBehaviour {
 	}
 	
 	public void PlayDeathAnimation() {
-		animation.Play(deathAnimation.name);
+		anim.Play(deathAnimation.name);
 		//Debug.Log("Play death animation");
 	}
 	
 	public bool DeathAnimationFinished() {
-		if (animation.IsPlaying(deathAnimation.name)) {
+		if (anim.IsPlaying(deathAnimation.name)) {
 			return false;
 		}
 		return true;

@@ -7,13 +7,13 @@ public class LevelEnd : MonoBehaviour {
 	public string nextLevel;
 	
 	private bool reachedEnd = false;
-	private Animation animation;
+	private Animation anim;
 	
 	// Use this for initialization
 	void Start () {
 		if (playAnimationOnLevelEnd) {
-			animation = (Animation) GetComponent("Animation");
-			animation.playAutomatically = false;
+			anim = (Animation) GetComponent("Animation");
+			anim.playAutomatically = false;
 		}
 		if (nextLevel == "") Debug.LogWarning("Level End leads to nowhere. You may want to set a level name in the inspector");
 	}

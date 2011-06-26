@@ -10,7 +10,7 @@ public class PhysicsCharacterControllerCopy: MonoBehaviour {
 	
 	public Camera mainCamera;
 	
-	private Animation animation;
+	private Animation anim;
 	
 	public AnimationClip idleAnimation;
 	public AnimationClip walkAnimation;
@@ -66,7 +66,7 @@ public class PhysicsCharacterControllerCopy: MonoBehaviour {
 	public float jumpLimit = 0;
 	
 	private int groundCounter = 0;
-	private bool isMoving = false;
+	//private bool isMoving = false;
 	private Vector3 originalOrientation = Vector3.zero;
 	private Vector3 charOrientation = Vector3.zero;
 	//[HideInInspector]
@@ -83,39 +83,39 @@ public class PhysicsCharacterControllerCopy: MonoBehaviour {
 		
 		// TODO: set up main camera again when level loads
 		
-		animation = (Animation) GetComponent("Animation");
-		if(!animation) Debug.Log("The character you would like to control doesn't have animations. Moving her might look weird.");
+		anim = (Animation) GetComponent("Animation");
+		if(!anim) Debug.Log("The character you would like to control doesn't have animations. Moving her might look weird.");
 		if(!idleAnimation) {
-			animation = null;
+			anim = null;
 			Debug.Log("No idle animation found. Turning off animations.");
 		}
 		if(!walkAnimation) {
-			animation = null;
+			anim = null;
 			Debug.Log("No walk animation found. Turning off animations.");
 		}
 		if(!runAnimation) {
-			animation = null;
+			anim = null;
 			Debug.Log("No run animation found. Turning off animations.");
 		}
 		if(!jumpPoseAnimation && canJump) {
-			animation = null;
+			anim = null;
 			Debug.Log("No jump animation found and the character has canJump enabled. Turning off animations.");
 		}
 		if(!deathAnimation) {
-			animation = null;
+			anim = null;
 			Debug.Log("No death animation found and the character has canJump enabled. Turning off animations.");
 		}
 		if(!hurtAnimation) {
 			Debug.Log(gameObject.name + ": PhysicsCharacterController: no hurtAnimation found, assign one in the inspector.");
-			animation = null;
+			anim = null;
 		}
 		if (!projectileAnimation) {
 			Debug.Log(gameObject.name + ": PhysicsCharacterController: no projectile animation found. Turning off animations");
-			animation = null;
+			anim = null;
 		}
 		if (canMeleeAttack && !meleeAnimation) {
 			Debug.Log(gameObject.name + ": PhysicsCharacterController: no melee animation found and canMeleeAttack is check. Turning off animations.");
-			animation = null;
+			anim = null;
 		}
 	}
 	
@@ -210,7 +210,7 @@ public class PhysicsCharacterControllerCopy: MonoBehaviour {
 			//Debug.Log("shoot");
 			// do projectile animation and prefab 
 			characterState = CharacterState.Shooting;
-			animation.CrossFade(projectileAnimation.name);
+			anim.CrossFade(projectileAnimation.name);
 			shootTime = Time.time;
 			// instantiate the projectile
 			if (projectilePrefab != null) {
@@ -268,68 +268,68 @@ public class PhysicsCharacterControllerCopy: MonoBehaviour {
 		if(jumpLimit < 20) jumpLimit ++;
 		
 		// ANIMATION sector
-		if(animation) {
+		if(anim) {
 			if(characterState == CharacterState.Jumping) 
 			{
 				//if(!jumpingReachedApex) {
 				if (rigidbody.velocity.y > 0.0f) {
-					animation[jumpPoseAnimation.name].speed = jumpAnimationSpeed;
-					animation[jumpPoseAnimation.name].wrapMode = WrapMode.ClampForever;
-					animation.CrossFade(jumpPoseAnimation.name);
+					anim[jumpPoseAnimation.name].speed = jumpAnimationSpeed;
+					anim[jumpPoseAnimation.name].wrapMode = WrapMode.ClampForever;
+					anim.CrossFade(jumpPoseAnimation.name);
 				} else {
-					animation[jumpPoseAnimation.name].speed = -landAnimationSpeed;
-					animation[jumpPoseAnimation.name].wrapMode = WrapMode.ClampForever;
-					animation.CrossFade(jumpPoseAnimation.name);				
+					anim[jumpPoseAnimation.name].speed = -landAnimationSpeed;
+					anim[jumpPoseAnimation.name].wrapMode = WrapMode.ClampForever;
+					anim.CrossFade(jumpPoseAnimation.name);				
 				}
-				animation.CrossFade(jumpPoseAnimation.name);
+				anim.CrossFade(jumpPoseAnimation.name);
 			} 
 			else 
 			{
 				//if(rigidbody.velocity.sqrMagnitude < 0.01) {
 				if (characterState == CharacterState.Idle) {
-					animation.CrossFade(idleAnimation.name);
+					anim.CrossFade(idleAnimation.name);
 				}
 				else 
 				{
 					if(characterState == CharacterState.Running) {
-						animation[runAnimation.name].speed = Mathf.Clamp(rigidbody.velocity.magnitude, 0.0f, runMaxAnimationSpeed);
-						animation.CrossFade(runAnimation.name);	
+						anim[runAnimation.name].speed = Mathf.Clamp(rigidbody.velocity.magnitude, 0.0f, runMaxAnimationSpeed);
+						anim.CrossFade(runAnimation.name);	
 					}
 					/*else if(characterState == CharacterState.Trotting) {
 						animation[walkAnimation.name].speed = Mathf.Clamp(rigidbody.velocity.magnitude, 0.0f, trotMaxAnimationSpeed);
 						animation.CrossFade(walkAnimation.name);	
 					}*/
 					else if(characterState == CharacterState.Walking) {
-						animation[walkAnimation.name].speed = Mathf.Clamp(rigidbody.velocity.magnitude*walkAnimationSpeed, 0.0f, walkMaxAnimationSpeed);
-						animation.CrossFade(walkAnimation.name);	
+						anim[walkAnimation.name].speed = Mathf.Clamp(rigidbody.velocity.magnitude*walkAnimationSpeed, 0.0f, walkMaxAnimationSpeed);
+						anim.CrossFade(walkAnimation.name);	
 					}
 					else if(characterState == CharacterState.Dead) {
-						animation.CrossFade(deathAnimation.name);
+						anim.CrossFade(deathAnimation.name);
 					}
 				}
 			}
 			if (characterState == CharacterState.Hurt) {
-				animation.CrossFade(hurtAnimation.name);
+				anim.CrossFade(hurtAnimation.name);
 			}
 			else if (characterState == CharacterState.Shooting) {
-				if (!animation.IsPlaying(projectileAnimation.name)) {
+				if (!anim.IsPlaying(projectileAnimation.name)) {
 					characterState = CharacterState.Idle;
 				}
 			}
 			else if (canMeleeAttack && characterState == CharacterState.Melee) {
-				animation.CrossFade(meleeAnimation.name);
+				anim.CrossFade(meleeAnimation.name);
 			}
 		}
 	// ANIMATION sector
 	}
 	
 	public void PlayDeathAnimation() {
-		animation.Play(deathAnimation.name);
+		anim.Play(deathAnimation.name);
 		//Debug.Log("Play death animation");
 	}
 	
 	public bool DeathAnimationFinished() {
-		if (animation.IsPlaying(deathAnimation.name)) {
+		if (anim.IsPlaying(deathAnimation.name)) {
 			return false;
 		}
 		return true;

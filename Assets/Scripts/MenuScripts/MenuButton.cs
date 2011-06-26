@@ -128,7 +128,7 @@ public class MenuButton : MonoBehaviour {
 	// do switching of the buttons on LateUpdate to avoid multiple click throughs
 	void LateUpdate() {
 		if (buttonIsHighlighted && (horizontalValue != 0.0f || verticalValue != 0.0f) ) {
-			float maxValue = 0.0f;
+			//float maxValue = 0.0f;
 			if (Mathf.Abs(verticalValue) < Mathf.Abs(horizontalValue) ) {
 				if (horizontalValue < 0.0f && leftPressMenuButton != null) {
 					buttonIsHighlighted = false;

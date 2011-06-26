@@ -5,7 +5,7 @@ using System.Collections;
 
 public class EnemyController : MonoBehaviour {
 		
-	private Animation animation;
+	private Animation anim;
 	
 	public AnimationClip idleAnimation;
 	public AnimationClip walkAnimation;
@@ -24,6 +24,7 @@ public class EnemyController : MonoBehaviour {
 	private float hurtTime = 0.0f;
 	
 	public int health = 2;
+	public float killDelayTime = 1.5f;
 	public int scoreValue = 1;
 	
 	public bool enemyCanShoot = false;
@@ -42,7 +43,7 @@ public class EnemyController : MonoBehaviour {
 	}
 	public EnemyState enemyState = 0;
 	
-	private bool isMoving = false;
+	//private bool isMoving = false;
 	private Vector3 originalOrientation = Vector3.zero;
 	private Vector3 charOrientation = Vector3.zero;
 	//[HideInInspector]
@@ -50,9 +51,9 @@ public class EnemyController : MonoBehaviour {
 	private Vector3 addForce = Vector3.zero;
  
 	private GameObject mainCamera;
-	private Vector3 attackDirection;
+	public Vector3 attackDirection;
 	
-	private bool printPos = true;
+	//private bool printPos = true;
 	private GameObject thePlayer;
 	
 	private ScoreUpdate scoreUpdate;
@@ -65,18 +66,18 @@ public class EnemyController : MonoBehaviour {
 		charOrientation = transform.TransformDirection(Vector3.forward);
 		originalOrientation = transform.TransformDirection(Vector3.forward);
 				
-		animation = (Animation) GetComponent("Animation");
-		if(!animation) Debug.Log("The character you would like to control doesn't have animations. Moving her might look weird.");
+		anim = (Animation) GetComponent("Animation");
+		if(!anim) Debug.Log("The character you would like to control doesn't have animations. Moving her might look weird.");
 		if(!idleAnimation) {
-			animation = null;
+			anim = null;
 			Debug.Log("No idle animation found. Turning off animations.");
 		}
 		if(!walkAnimation) {
-			animation = null;
+			anim = null;
 			Debug.Log("No walk animation found. Turning off animations.");
 		}
 		if(!deathAnimation) {
-			animation = null;
+			anim = null;
 			Debug.Log("No death animation found and the character has canJump enabled. Turning off animations.");
 		}
 		if(!hurtAnimation) {
@@ -95,9 +96,13 @@ public class EnemyController : MonoBehaviour {
  
 	void OnTriggerStay (Collider other)
 	{
+		//Debug.Log(gameObject.name + ": EnemyController: " + other.gameObject.name + " detected");
+
 		if (other.gameObject.tag == "Player") {
-			//Debug.Log("player detected");
-			attackDirection = transform.position - other.gameObject.transform.position;
+			//Debug.Log(gameObject.name + ": EnemyController: player " + other.gameObject.name + " detected");
+			attackDirection = other.gameObject.transform.position - transform.position;
+
+			//attackDirection = transform.position - other.gameObject.transform.position;
 			//if (printPos) Debug.Log(attackDirection);
 			if (enemyCanShoot && Time.time - shootTime > shootCooldown) {
 				if (projectilePrefab != null) {
@@ -147,11 +152,11 @@ public class EnemyController : MonoBehaviour {
 		float h = horizontal; //Input.GetAxisRaw("Horizontal");
 		//if (h > 0.0f) Debug.Log(h);
 	
-		bool wasMoving = isMoving;
-		isMoving = rigidbody.velocity.magnitude > 0.1 ;
+		//bool wasMoving = isMoving;
+		//isMoving = rigidbody.velocity.magnitude > 0.1 ;
 		
 		// Target direction relative to the camera
-		if (h != 0.0) charOrientation = h <0.0 ? cameraTransform.TransformDirection(originalOrientation) : cameraTransform.TransformDirection(-1.0f*originalOrientation);
+		if (h != 0.0) charOrientation = h > 0.0 ? cameraTransform.TransformDirection(originalOrientation) : cameraTransform.TransformDirection(-1.0f*originalOrientation);
 	
 		// Grounded controls
 		if (enemyState != EnemyState.Hurt)
@@ -171,7 +176,7 @@ public class EnemyController : MonoBehaviour {
 	}
 	
 	public void DamageEnemy(int damage ) {
-		Debug.Log(gameObject.name + " EnemyController: DamageEnemy " + damage);
+		//Debug.Log(gameObject.name + " EnemyController: DamageEnemy " + damage);
 		health -= damage;
 		HurtEnemy();
 	}
@@ -195,13 +200,13 @@ public class EnemyController : MonoBehaviour {
 		//attackDirection = Vector3.zero;
 
 		UpdateSmoothedMovementDirection();
-		Vector3 lookTarget = new Vector3(charOrientation.x+transform.position.x, transform.position.y, transform.position.z + charOrientation.z);
+		Vector3 lookTarget = new Vector3(charOrientation.x+transform.position.x, transform.position.y, -(transform.position.z + charOrientation.z));
 		transform.LookAt(lookTarget);
  
 		// If the object is grounded and isn't moving at the max speed or higher apply force to move it
 		if(Mathf.Abs(horizontal) > 0.0f && rigidbody.velocity.magnitude < maxWalkSpeed)
 		{
-			addForce = Vector3.right*  -horizontal ;
+			addForce = Vector3.left*  -horizontal ;
 			//if (printPos) Debug.Log("h " + horizontal);
 			addForce.y = 0.05f;
 			rigidbody.AddForce(addForce*walkForce);
@@ -209,19 +214,19 @@ public class EnemyController : MonoBehaviour {
 		}
 		
 		// ANIMATION sector
-		if(animation) {
+		if(anim) {
 				if (enemyState == EnemyState.Idle) {
 					animation.CrossFade(idleAnimation.name);
 				}
 				else if(enemyState == EnemyState.Walking) {
-						animation[walkAnimation.name].speed = Mathf.Clamp(rigidbody.velocity.magnitude*walkAnimationSpeed, 0.0f, walkMaxAnimationSpeed);
-						animation.CrossFade(walkAnimation.name);	
+						anim[walkAnimation.name].speed = Mathf.Clamp(rigidbody.velocity.magnitude*walkAnimationSpeed, 0.0f, walkMaxAnimationSpeed);
+						anim.CrossFade(walkAnimation.name);	
 				}
 				else if(enemyState == EnemyState.Dead) {
-						animation.CrossFade(deathAnimation.name);
+						anim.CrossFade(deathAnimation.name);
 				}
 				if (enemyState == EnemyState.Hurt) {
-					animation.CrossFade(hurtAnimation.name);
+					anim.CrossFade(hurtAnimation.name);
 				}
 		}
 		// ANIMATION sector
@@ -234,16 +239,17 @@ public class EnemyController : MonoBehaviour {
 			PlayDeathAnimation();
 			thePlayer = GameObject.Find("Player");
 			thePlayer.BroadcastMessage("UpdateScore", scoreValue);
+			Destroy(gameObject, killDelayTime);
 		}
 	}
 	
 	public void PlayDeathAnimation() {
-		animation.Play(deathAnimation.name);
-		Debug.Log("Play death animation");
+		anim.Play(deathAnimation.name);
+		//Debug.Log("Play death animation");
 	}
 	
 	public bool DeathAnimationFinished() {
-		if (animation.IsPlaying(deathAnimation.name)) {
+		if (anim.IsPlaying(deathAnimation.name)) {
 			return false;
 		}
 		return true;
