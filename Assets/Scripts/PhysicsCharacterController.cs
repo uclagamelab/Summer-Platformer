@@ -66,7 +66,7 @@ public class PhysicsCharacterController : MonoBehaviour {
 	public bool grounded = false;
 	public float jumpLimit = 0;
 	
-	private int groundCounter = 0;
+	public int groundCounter = 0;
 	//private bool isMoving = false;
 	private Vector3 originalOrientation = Vector3.zero;
 	private Vector3 charOrientation = Vector3.zero;
@@ -131,18 +131,18 @@ public class PhysicsCharacterController : MonoBehaviour {
 	}
  
 	// This part detects whether or not the object is grounded and stores it in a variable
-	void OnCollisionEnter ()
+	void OnCollisionEnter (Collision other)
 	{
-		groundCounter ++;
+		if (other.gameObject.tag != "Player") groundCounter ++;
 		if(groundCounter > 0)
 		{
 			grounded = true;
 		}
 	}
  
-	void OnCollisionExit ()
+	void OnCollisionExit (Collision other)
 	{
-		groundCounter --;
+		if (other.gameObject.tag != "Player") groundCounter --;
 		if(groundCounter < 1)
 		{
 			grounded = false;
@@ -203,12 +203,20 @@ public class PhysicsCharacterController : MonoBehaviour {
 		if (grounded && characterState != CharacterState.Hurt && characterState != CharacterState.Shooting)
 		{
 			//	determine character state
-			characterState = CharacterState.Walking;
+			/* characterState = CharacterState.Walking;
 			if (rigidbody.velocity.magnitude > maxWalkSpeed && allowRunning) { 
 				characterState = CharacterState.Running;
 			}
-			else if (rigidbody.velocity.sqrMagnitude < 0.01f) {
+			else if (rigidbody.velocity.sqrMagnitude < 0.01f && Mathf.Abs(h) < 0.1f) {
 				characterState = CharacterState.Idle;
+			} */
+			
+			characterState = CharacterState.Idle;
+			if (rigidbody.velocity.magnitude > maxWalkSpeed && allowRunning) { 
+				characterState = CharacterState.Running;
+			}
+			else if (rigidbody.velocity.sqrMagnitude > 0.01f && Mathf.Abs(h) > 0.1f) {
+				characterState = CharacterState.Walking;
 			}
 		
 		}		
@@ -266,9 +274,11 @@ public class PhysicsCharacterController : MonoBehaviour {
 			rigidbody.AddForce(addForce*runForce);
 		}
 		//else if(jump && grounded  && jumpLimit >= 10)
-		else if(vertical > 0.0f && grounded  && jumpLimit >= 20 && Time.time - jumpTime > jumpCooldown)
+		else if(vertical > 0.0f && grounded  && jumpLimit >= 20 && Time.time - jumpTime > jumpCooldown && Mathf.Abs(vertical) > 0.01f)
 		{
-			rigidbody.velocity = rigidbody.velocity + (Vector3.up * jumpSpeed) + (transform.rotation *Vector3.forward *Mathf.Abs(horizontal));
+			//rigidbody.velocity = rigidbody.velocity + (Vector3.up * jumpSpeed) + (transform.rotation *Vector3.forward *Mathf.Abs(horizontal));
+			rigidbody.velocity = (rigidbody.velocity*0.5f) + (Vector3.up * jumpSpeed) + (transform.rotation *Vector3.forward *Mathf.Abs(horizontal));
+
 			jumpLimit = 0;
 			characterState = CharacterState.Jumping;
 			jumpTime = Time.time;

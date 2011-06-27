@@ -33,6 +33,7 @@ public class EnemyController : MonoBehaviour {
 	public GameObject shootSpawnPoint;
 	public float shootCooldown = 2.0f;
 	private float shootTime = 0.0f;
+	public bool switchShootDirection = false;
  
 	// These variables are there for use by the script and don't need to be edited
 	public enum EnemyState {
@@ -111,7 +112,8 @@ public class EnemyController : MonoBehaviour {
 					q.SetLookRotation(attackDirection ) ;
 					
 					GameObject g = (GameObject) Instantiate(projectilePrefab, shootSpawnPoint.transform.position, q);
-					g.transform.Rotate(Vector3.up*90);
+					if (switchShootDirection) g.transform.Rotate(Vector3.up*-90.0f);
+					else g.transform.Rotate(Vector3.up*90.0f);
 				}				
 				shootTime = Time.time;
 			}

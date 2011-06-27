@@ -16,6 +16,7 @@ public class PlayerAttributes : MonoBehaviour {
 	
 	public GameObject healthMeter;
 	private Counter healthCounter;
+	public GameObject textBoxLocation;
 	
 	public GameObject livesMeter;
 	private Counter livesCounter;
